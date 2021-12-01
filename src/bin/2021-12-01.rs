@@ -128,24 +128,33 @@ fn main() {
         2346, 2354, 2350, 2323, 2320, 2313, 2315, 2314, 2316, 2332, 2338, 2341,
     ];
 
-    let mut increased = 0;
-    let mut last_measurement = *measurements.last().unwrap();
-    for measurement in measurements {
-        if measurement > last_measurement {
-            increased += 1;
-        }
-        last_measurement = measurement;
-    }
+    // let mut increased = 0;
+    // let mut last_measurement = *measurements.last().unwrap();
+    // for measurement in measurements {
+    //     if measurement > last_measurement {
+    //         increased += 1;
+    //     }
+    //     last_measurement = measurement;
+    // }
+    let increased = measurements[..]
+        .windows(2)
+        .filter(|values| values[0] < values[1])
+        .count();
     println!("Part One: {}", increased);
 
-    let mut increased = 0;
-    let mut last_sum = measurements[0] + measurements[1] + measurements[2];
-    for index in 0..measurements.len() - 2 {
-        let sum = measurements[index] + measurements[index + 1] + measurements[index + 2];
-        if sum > last_sum {
-            increased += 1;
-        }
-        last_sum = sum;
-    }
+    // let mut increased = 0;
+    // let mut last_sum = measurements[0] + measurements[1] + measurements[2];
+    // for index in 0..measurements.len() - 2 {
+    //     let sum = measurements[index] + measurements[index + 1] + measurements[index + 2];
+    //     if sum > last_sum {
+    //         increased += 1;
+    //     }
+    //     last_sum = sum;
+    // }
+    let sums = measurements[..].windows(3).map(|values| values.iter().sum()).collect::<Vec<u32>>();
+    let increased = sums[..]
+        .windows(2)
+        .filter(|values| values[0] < values[1])
+        .count();
     println!("Part Two: {}", increased);
 }
