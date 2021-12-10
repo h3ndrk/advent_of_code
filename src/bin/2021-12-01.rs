@@ -151,7 +151,10 @@ fn main() {
     //     }
     //     last_sum = sum;
     // }
-    let sums = measurements[..].windows(3).map(|values| values.iter().sum()).collect::<Vec<u32>>();
+    let sums = measurements[..]
+        .windows(3)
+        .map(|values| values.iter().sum())
+        .collect::<Vec<u32>>();
     let increased = sums[..]
         .windows(2)
         .filter(|values| values[0] < values[1])
