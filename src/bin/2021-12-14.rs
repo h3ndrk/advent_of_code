@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 fn main() {
     // let example_rules = HashMap::from([
@@ -121,8 +121,11 @@ fn main() {
         (('S', 'V'), 'K'),
         (('P', 'P'), 'K'),
     ]);
-    println!("Part One: {}", calculate_counts(&puzzle_rules, "PFVKOBSHPSPOOOCOOHBP", 10));
-    println!("Part Two: {}", calculate_counts(&puzzle_rules, "PFVKOBSHPSPOOOCOOHBP", 40));
+    println!(
+        "Part One: {}",
+        calculate_counts2(&puzzle_rules, "PFVKOBSHPSPOOOCOOHBP", 10)
+    );
+    println!("Part Two: {}", calculate_counts2(&puzzle_rules, "PFVKOBSHPSPOOOCOOHBP", 40));
 }
 
 enum ParentIterator {
@@ -148,6 +151,7 @@ impl Iterator for ParentIterator {
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             ParentIterator::Chars(string, index) => {
+                println!("ParentIterator::Chars::next -> {}", index);
                 let character = string.chars().nth(*index);
                 *index += 1;
                 character
@@ -223,7 +227,11 @@ impl Iterator for PolymerIterator {
     }
 }
 
-fn calculate_counts(rules: &HashMap<(char, char), char>, polymer_template: &'static str, steps: usize) -> usize {
+fn calculate_counts(
+    rules: &HashMap<(char, char), char>,
+    polymer_template: &'static str,
+    steps: usize,
+) -> usize {
     let mut iterator = PolymerIterator::from_str(polymer_template, rules);
     for _ in 1..steps {
         iterator = PolymerIterator::from_iterator(iterator, rules);
@@ -245,6 +253,77 @@ fn calculate_counts(rules: &HashMap<(char, char), char>, polymer_template: &'sta
         counts
     });
     println!("Counts: {:?}", counts);
+    let minimum_amount = counts
+        .iter()
+        .min_by_key(|(_character, count)| *count)
+        .unwrap()
+        .1;
+    let maximum_amount = counts
+        .iter()
+        .max_by_key(|(_character, count)| *count)
+        .unwrap()
+        .1;
+    println!("Minimum Amount: {}", minimum_amount);
+    println!("Maximum Amount: {}", maximum_amount);
+    maximum_amount - minimum_amount
+}
+
+fn calculate_counts2(
+    rules: &HashMap<(char, char), char>,
+    polymer_template: &'static str,
+    steps: usize,
+) -> usize {
+    let mut pairs: HashMap<(char, char), usize> = HashMap::new();
+    for index in 1..polymer_template.chars().count() {
+        let entry = pairs
+            .entry((
+                polymer_template.chars().nth(index - 1).unwrap(),
+                polymer_template.chars().nth(index).unwrap(),
+            ))
+            .or_insert(0);
+        *entry += 1;
+    }
+    // println!("pairs: {:?}", pairs);
+    for _ in 0..steps {
+        // println!("step");
+        for (characters, count) in pairs.clone().iter() {
+            let (left_character, right_character) = characters;
+            let middle_character = rules[characters];
+            // println!(
+            //     "{}{} -> {}{}, {}{}",
+            //     left_character,
+            //     right_character,
+            //     left_character,
+            //     middle_character,
+            //     middle_character,
+            //     right_character
+            // );
+            let previous_entry = pairs.entry(*characters).or_insert(0);
+            // println!("{}{} -= {}", left_character, right_character, count);
+            *previous_entry -= count;
+            let next_left_entry = pairs
+                .entry((*left_character, middle_character))
+                .or_insert(0);
+            // println!("{}{} += {}", left_character, middle_character, count);
+            *next_left_entry += count;
+            let next_right_entry = pairs
+                .entry((middle_character, *right_character))
+                .or_insert(0);
+            // println!("{}{} += {}", middle_character, right_character, count);
+            *next_right_entry += count;
+        }
+        // println!("pairs: {:?}", pairs);
+    }
+    let mut counts: HashMap<char, usize> = HashMap::new();
+    let entry = counts
+        .entry(polymer_template.chars().last().unwrap())
+        .or_insert(0);
+    *entry += 1;
+    for (characters, count) in pairs.iter() {
+        let entry = counts.entry(characters.0).or_insert(0);
+        *entry += count;
+    }
+    // println!("{:?}", counts);
     let minimum_amount = counts
         .iter()
         .min_by_key(|(_character, count)| *count)
